@@ -1,5 +1,38 @@
 ﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+# Visual Studio Git Ignore
 ################################################################################
 
-/.vs/Cherish
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+/bin/
+/obj/
+/out/
+/Debug/
+/Release/
+
+# Visual Studio folder
+/.vs/
+
+# Other generated files
+*.cache
+*.log
+*.dll
+*.exe
+*.pdb
+*.tmp
+*.ide
+*.dbmdl
+
+# Auto-generated packages
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Others
+*.localhistory/
