@@ -34,16 +34,20 @@ public class PostgreSQLPostProvider : IPostProvider
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
+            var userMentionedJson = reader.GetString(4);
+            var hashtagsJson = reader.GetString(6);
+            var metadataJson = reader.GetString(7);
+
             return new Post
             {
                 Id = reader.GetGuid(0),
                 UserId = reader.GetGuid(1),
                 CompanyId = reader.GetGuid(2),
                 Context = reader.GetString(3),
-                UserMentioned = reader.GetFieldValue<List<Guid>>(4),
+                UserMentioned = JsonSerializer.Deserialize<List<Guid>>(userMentionedJson) ?? new List<Guid>(),
                 CreatedAt = reader.GetDateTime(5),
-                Hashtags = reader.GetFieldValue<List<int>>(6),
-                Metadata = reader.GetFieldValue<string>(7),
+                Hashtags = JsonSerializer.Deserialize<List<int>>(hashtagsJson) ?? new List<int>(),
+                Metadata = metadataJson,
                 TotalPoints = reader.GetInt32(8),
                 Visibility = (PostVisibility)reader.GetInt32(9)
             };
@@ -71,16 +75,20 @@ public class PostgreSQLPostProvider : IPostProvider
 
         while (await reader.ReadAsync())
         {
+            var userMentionedJson = reader.GetString(4);
+            var hashtagsJson = reader.GetString(6);
+            var metadataJson = reader.GetString(7);
+
             posts.Add(new Post
             {
                 Id = reader.GetGuid(0),
                 UserId = reader.GetGuid(1),
                 CompanyId = reader.GetGuid(2),
                 Context = reader.GetString(3),
-                UserMentioned = reader.GetFieldValue<List<Guid>>(4),
+                UserMentioned = JsonSerializer.Deserialize<List<Guid>>(userMentionedJson) ?? new List<Guid>(),
                 CreatedAt = reader.GetDateTime(5),
-                Hashtags = reader.GetFieldValue<List<int>>(6),
-                Metadata = reader.GetFieldValue<string>(7),
+                Hashtags = JsonSerializer.Deserialize<List<int>>(hashtagsJson) ?? new List<int>(),
+                Metadata = metadataJson,
                 TotalPoints = reader.GetInt32(8),
                 Visibility = (PostVisibility)reader.GetInt32(9)
             });
@@ -108,16 +116,20 @@ public class PostgreSQLPostProvider : IPostProvider
 
         while (await reader.ReadAsync())
         {
+            var userMentionedJson = reader.GetString(4);
+            var hashtagsJson = reader.GetString(6);
+            var metadataJson = reader.GetString(7);
+
             posts.Add(new Post
             {
                 Id = reader.GetGuid(0),
                 UserId = reader.GetGuid(1),
                 CompanyId = reader.GetGuid(2),
                 Context = reader.GetString(3),
-                UserMentioned = reader.GetFieldValue<List<Guid>>(4),
+                UserMentioned = JsonSerializer.Deserialize<List<Guid>>(userMentionedJson) ?? new List<Guid>(),
                 CreatedAt = reader.GetDateTime(5),
-                Hashtags = reader.GetFieldValue<List<int>>(6),
-                Metadata = reader.GetFieldValue<string>(7),
+                Hashtags = JsonSerializer.Deserialize<List<int>>(hashtagsJson) ?? new List<int>(),
+                Metadata = metadataJson,
                 TotalPoints = reader.GetInt32(8),
                 Visibility = (PostVisibility)reader.GetInt32(9)
             });
@@ -145,16 +157,20 @@ public class PostgreSQLPostProvider : IPostProvider
 
         while (await reader.ReadAsync())
         {
+            var userMentionedJson = reader.GetString(4);
+            var hashtagsJson = reader.GetString(6);
+            var metadataJson = reader.GetString(7);
+
             posts.Add(new Post
             {
                 Id = reader.GetGuid(0),
                 UserId = reader.GetGuid(1),
                 CompanyId = reader.GetGuid(2),
                 Context = reader.GetString(3),
-                UserMentioned = reader.GetFieldValue<List<Guid>>(4),
+                UserMentioned = JsonSerializer.Deserialize<List<Guid>>(userMentionedJson) ?? new List<Guid>(),
                 CreatedAt = reader.GetDateTime(5),
-                Hashtags = reader.GetFieldValue<List<int>>(6),
-                Metadata = reader.GetFieldValue<string>(7),
+                Hashtags = JsonSerializer.Deserialize<List<int>>(hashtagsJson) ?? new List<int>(),
+                Metadata = metadataJson,
                 TotalPoints = reader.GetInt32(8),
                 Visibility = (PostVisibility)reader.GetInt32(9)
             });
@@ -182,16 +198,20 @@ public class PostgreSQLPostProvider : IPostProvider
 
         while (await reader.ReadAsync())
         {
+            var userMentionedJson = reader.GetString(4);
+            var hashtagsJson = reader.GetString(6);
+            var metadataJson = reader.GetString(7);
+
             posts.Add(new Post
             {
                 Id = reader.GetGuid(0),
                 UserId = reader.GetGuid(1),
                 CompanyId = reader.GetGuid(2),
                 Context = reader.GetString(3),
-                UserMentioned = reader.GetFieldValue<List<Guid>>(4),
+                UserMentioned = JsonSerializer.Deserialize<List<Guid>>(userMentionedJson) ?? new List<Guid>(),
                 CreatedAt = reader.GetDateTime(5),
-                Hashtags = reader.GetFieldValue<List<int>>(6),
-                Metadata = reader.GetFieldValue<string>(7),
+                Hashtags = JsonSerializer.Deserialize<List<int>>(hashtagsJson) ?? new List<int>(),
+                Metadata = metadataJson,
                 TotalPoints = reader.GetInt32(8),
                 Visibility = (PostVisibility)reader.GetInt32(9)
             });
@@ -217,16 +237,20 @@ public class PostgreSQLPostProvider : IPostProvider
 
         while (await reader.ReadAsync())
         {
+            var userMentionedJson = reader.GetString(4);
+            var hashtagsJson = reader.GetString(6);
+            var metadataJson = reader.GetString(7);
+
             posts.Add(new Post
             {
                 Id = reader.GetGuid(0),
                 UserId = reader.GetGuid(1),
                 CompanyId = reader.GetGuid(2),
                 Context = reader.GetString(3),
-                UserMentioned = reader.GetFieldValue<List<Guid>>(4),
+                UserMentioned = JsonSerializer.Deserialize<List<Guid>>(userMentionedJson) ?? new List<Guid>(),
                 CreatedAt = reader.GetDateTime(5),
-                Hashtags = reader.GetFieldValue<List<int>>(6),
-                Metadata = reader.GetFieldValue<string>(7),
+                Hashtags = JsonSerializer.Deserialize<List<int>>(hashtagsJson) ?? new List<int>(),
+                Metadata = metadataJson,
                 TotalPoints = reader.GetInt32(8),
                 Visibility = (PostVisibility)reader.GetInt32(9)
             });
@@ -258,16 +282,20 @@ public class PostgreSQLPostProvider : IPostProvider
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
+            var userMentionedJson = reader.GetString(4);
+            var hashtagsJson = reader.GetString(6);
+            var metadataJson = reader.GetString(7);
+
             return new Post
             {
                 Id = reader.GetGuid(0),
                 UserId = reader.GetGuid(1),
                 CompanyId = reader.GetGuid(2),
                 Context = reader.GetString(3),
-                UserMentioned = reader.GetFieldValue<List<Guid>>(4),
+                UserMentioned = JsonSerializer.Deserialize<List<Guid>>(userMentionedJson) ?? new List<Guid>(),
                 CreatedAt = reader.GetDateTime(5),
-                Hashtags = reader.GetFieldValue<List<int>>(6),
-                Metadata = reader.GetFieldValue<string>(7),
+                Hashtags = JsonSerializer.Deserialize<List<int>>(hashtagsJson) ?? new List<int>(),
+                Metadata = metadataJson,
                 TotalPoints = reader.GetInt32(8),
                 Visibility = (PostVisibility)reader.GetInt32(9)
             };
@@ -308,16 +336,20 @@ public class PostgreSQLPostProvider : IPostProvider
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
+            var userMentionedJson = reader.GetString(4);
+            var hashtagsJson = reader.GetString(6);
+            var metadataJson = reader.GetString(7);
+
             return new Post
             {
                 Id = reader.GetGuid(0),
                 UserId = reader.GetGuid(1),
                 CompanyId = reader.GetGuid(2),
                 Context = reader.GetString(3),
-                UserMentioned = reader.GetFieldValue<List<Guid>>(4),
+                UserMentioned = JsonSerializer.Deserialize<List<Guid>>(userMentionedJson) ?? new List<Guid>(),
                 CreatedAt = reader.GetDateTime(5),
-                Hashtags = reader.GetFieldValue<List<int>>(6),
-                Metadata = reader.GetFieldValue<string>(7),
+                Hashtags = JsonSerializer.Deserialize<List<int>>(hashtagsJson) ?? new List<int>(),
+                Metadata = metadataJson,
                 TotalPoints = reader.GetInt32(8),
                 Visibility = (PostVisibility)reader.GetInt32(9),
                 Deleted = reader.GetBoolean(10)

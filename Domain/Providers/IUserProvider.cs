@@ -12,4 +12,6 @@ public interface IUserProvider
     Task<bool> DeleteUserAsync(string username);
     Task<bool> UpdateUserPointsAsync(Guid userId, int newTotalPoints, int newAvailablePoints);
     Task<List<User>> GetUsersAsync(Guid companyId, List<Guid>? userIds = null, UserStatus? status = null, Guid? teamId = null, UserRole? role = null, int pageNumber = 1, int pageSize = 20);
+    Task<List<User>> GetUserAutocompleteAsync(Guid companyId, string searchTerm, int limit = 3);
+    Task<List<User>> GetTeammatesAsync(Guid userId, Guid companyId);
 }

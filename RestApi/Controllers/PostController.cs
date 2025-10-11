@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Cherish.RestApi.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class PostController : ControllerBase
 {
@@ -25,7 +26,7 @@ public class PostController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("create")]
+    [HttpPost]
     public async Task<ActionResult<ApiResponse<PostResponse>>> CreatePost([FromBody] CreatePostRequest request)
     {
         try
@@ -77,14 +78,7 @@ public class PostController : ControllerBase
             {
                 Id = result.Post!.Id,
                 UserId = result.Post.UserId,
-                CompanyId = result.Post.CompanyId,
                 Context = result.Post.Context,
-                UserMentioned = result.Post.UserMentioned,
-                CreatedAt = result.Post.CreatedAt,
-                Hashtags = result.Post.Hashtags,
-                Metadata = result.Post.Metadata,
-                TotalPoints = result.Post.TotalPoints,
-                Visibility = result.Post.Visibility
             };
 
             return Ok(new ApiResponse<PostResponse>

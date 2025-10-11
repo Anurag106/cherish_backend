@@ -99,15 +99,17 @@ public class ContentParsingService : IContentParsingService
         };
     }
 
-    public async Task<(List<Guid> UserMentioned, List<int> Hashtags, int TotalPoints, string ParsedContent)> ParsePostContentAsync(string content, Guid companyId)
+    public async Task<(List<Guid> UserMentioned, List<int> Hashtags, int TotalPoints, string ParsedContent, List<string> NotFoundUsernames)> ParsePostContentAsync(string content, Guid companyId, Guid userId)
     {
         var userMentioned = new List<Guid>();
         var hashtags = new List<int>();
         var totalPoints = 0;
         var parsedContent = content;
+        var notFoundUsernames = new List<string>();
 
-        // Parse user mentions (@username)
-        var mentionMatches = Regex.Matches(content, @"@(\w+)");
+        // Parse user mentions (@username) and convert to user IDs
+        // Pattern allows alphanumeric, dots, hyphens, and underscores in usernames
+        var mentionMatches = Regex.Matches(content, @"@([\w.-]+)");
         foreach (Match match in mentionMatches)
         {
             var username = match.Groups[1].Value;
@@ -116,14 +118,41 @@ public class ContentParsingService : IContentParsingService
             {
                 userMentioned.Add(user.Id);
             }
+            else
+            {
+                _logger.LogWarning("User mention not found or not in company: @{Username}", username);
+                notFoundUsernames.Add(username);
+            }
         }
 
-        // Parse hashtags (#hashtagname)
+        // Parse hashtags (#hashtagname) and convert to hashtag IDs
+        // Create hashtag if it doesn't exist
         var hashtagMatches = Regex.Matches(content, @"#([\w-]+)");
         foreach (Match match in hashtagMatches)
         {
             var hashtagName = match.Groups[1].Value;
             var hashtag = await _hashtagProvider.GetHashtagByNameAsync(hashtagName, companyId);
+            
+            // If hashtag doesn't exist, create it
+            if (hashtag == null)
+            {
+                try
+                {
+                    _logger.LogInformation("Creating new hashtag: {HashtagName} for company: {CompanyId}", hashtagName, companyId);
+                    hashtag = await _hashtagProvider.CreateHashtagAsync(
+                        hashtagName, 
+                        $"Auto-created from post", 
+                        companyId, 
+                        userId);
+                    _logger.LogInformation("Successfully created hashtag: {HashtagName} with ID: {HashtagId}", hashtagName, hashtag.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating hashtag: {HashtagName}", hashtagName);
+                    continue; // Skip this hashtag if creation fails
+                }
+            }
+            
             if (hashtag != null)
             {
                 hashtags.Add(hashtag.Id);
@@ -140,7 +169,7 @@ public class ContentParsingService : IContentParsingService
             }
         }
 
-        return (userMentioned, hashtags, totalPoints, parsedContent);
+        return (userMentioned, hashtags, totalPoints, parsedContent, notFoundUsernames);
     }
 
     public async Task<bool> ValidateUserHasEnoughPointsAsync(Guid userId, int requiredPoints)

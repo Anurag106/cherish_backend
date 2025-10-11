@@ -22,7 +22,7 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT id, company_id, from_user_id, to_user_id, points, date_and_time, description
+            SELECT id, company_id, from_user_id, to_user_id, points, created_at, description
             FROM transactions
             WHERE id = @id";
 
@@ -53,10 +53,10 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT id, company_id, from_user_id, to_user_id, points, date_and_time, description
+            SELECT id, company_id, from_user_id, to_user_id, points, created_at, description
             FROM transactions
             WHERE company_id = @company_id
-            ORDER BY date_and_time DESC";
+            ORDER BY created_at DESC";
 
         using var command = new NpgsqlCommand(query, connection);
         command.Parameters.AddWithValue("@company_id", companyId);
@@ -87,10 +87,10 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT id, company_id, from_user_id, to_user_id, points, date_and_time, description
+            SELECT id, company_id, from_user_id, to_user_id, points, created_at, description
             FROM transactions
             WHERE from_user_id = @from_user_id
-            ORDER BY date_and_time DESC";
+            ORDER BY created_at DESC";
 
         using var command = new NpgsqlCommand(query, connection);
         command.Parameters.AddWithValue("@from_user_id", fromUserId);
@@ -121,10 +121,10 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT id, company_id, from_user_id, to_user_id, points, date_and_time, description
+            SELECT id, company_id, from_user_id, to_user_id, points, created_at, description
             FROM transactions
             WHERE to_user_id = @to_user_id
-            ORDER BY date_and_time DESC";
+            ORDER BY created_at DESC";
 
         using var command = new NpgsqlCommand(query, connection);
         command.Parameters.AddWithValue("@to_user_id", toUserId);
@@ -155,10 +155,10 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT id, company_id, from_user_id, to_user_id, points, date_and_time, description
+            SELECT id, company_id, from_user_id, to_user_id, points, created_at, description
             FROM transactions
             WHERE from_user_id = @user_id OR to_user_id = @user_id
-            ORDER BY date_and_time DESC";
+            ORDER BY created_at DESC";
 
         using var command = new NpgsqlCommand(query, connection);
         command.Parameters.AddWithValue("@user_id", userId);
@@ -189,9 +189,9 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
         await connection.OpenAsync();
 
         var query = @"
-            INSERT INTO transactions (company_id, from_user_id, to_user_id, points, date_and_time, description)
-            VALUES (@company_id, @from_user_id, @to_user_id, @points, CURRENT_TIMESTAMP, @description)
-            RETURNING id, company_id, from_user_id, to_user_id, points, date_and_time, description";
+            INSERT INTO transactions (company_id, from_user_id, to_user_id, points, description, created_at)
+            VALUES (@company_id, @from_user_id, @to_user_id, @points, @description, CURRENT_TIMESTAMP)
+            RETURNING id, company_id, from_user_id, to_user_id, points, created_at, description";
 
         using var command = new NpgsqlCommand(query, connection);
         command.Parameters.AddWithValue("@company_id", companyId);
@@ -224,9 +224,9 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT id, company_id, from_user_id, to_user_id, points, date_and_time, description
+            SELECT id, company_id, from_user_id, to_user_id, points, created_at, description
             FROM transactions
-            ORDER BY date_and_time DESC";
+            ORDER BY created_at DESC";
 
         using var command = new NpgsqlCommand(query, connection);
 

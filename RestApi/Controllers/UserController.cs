@@ -16,15 +16,18 @@ namespace Cherish.RestApi.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserProvider _userProvider;
+    private readonly IUserService _userService;
     private readonly ITokenService _tokenService;
     private readonly ILogger<UserController> _logger;
 
     public UserController(
         IUserProvider userProvider,
+        IUserService userService,
         ITokenService tokenService,
         ILogger<UserController> logger)
     {
         _userProvider = userProvider;
+        _userService = userService;
         _tokenService = tokenService;
         _logger = logger;
     }
@@ -77,12 +80,7 @@ public class UserController : ControllerBase
                 UpdatedAt = user.UpdatedAt
             };
 
-            return Ok(new ApiResponse<UserProfileResponse>
-            {
-                Success = true,
-                Message = "User profile retrieved successfully",
-                Data = response
-            });
+            return Ok(response);
         }
         catch (Exception ex)
         {
@@ -220,6 +218,106 @@ public class UserController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while retrieving users"
+            });
+        }
+    }
+
+    [HttpGet("autocomplete")]
+    public async Task<ActionResult<ApiResponse<List<UserMentionResponse>>>> GetUserAutocomplete([FromQuery] string search)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                return BadRequest(new ApiResponse<List<UserMentionResponse>>
+                {
+                    Success = false,
+                    Message = "Search term is required"
+                });
+            }
+
+            var token = GetTokenFromRequest();
+            var companyId = _tokenService.GetCompanyIdFromToken(token);
+            
+            if (companyId == null)
+            {
+                return Unauthorized(new ApiResponse<List<UserMentionResponse>>
+                {
+                    Success = false,
+                    Message = "Invalid token or company not found"
+                });
+            }
+
+            var users = await _userService.GetUserAutocompleteAsync(companyId.Value, search, 3);
+
+            var response = users.Select(user => new UserMentionResponse
+            {
+                UserId = user.Id,
+                Username = user.Username,
+                FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                Department = user.Department
+            }).ToList();
+
+            return Ok(new ApiResponse<List<UserMentionResponse>>
+            {
+                Success = true,
+                Message = $"Found {response.Count} users",
+                Data = response
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting user autocomplete");
+            return StatusCode(500, new ApiResponse<List<UserMentionResponse>>
+            {
+                Success = false,
+                Message = "An error occurred while searching for users"
+            });
+        }
+    }
+
+    [HttpGet("recipients")]
+    public async Task<ActionResult<ApiResponse<List<UserMentionResponse>>>> GetRecipients()
+    {
+        try
+        {
+            var token = GetTokenFromRequest();
+            var userId = _tokenService.GetUserIdFromToken(token);
+            var companyId = _tokenService.GetCompanyIdFromToken(token);
+            
+            if (userId == null || companyId == null)
+            {
+                return Unauthorized(new ApiResponse<List<UserMentionResponse>>
+                {
+                    Success = false,
+                    Message = "Invalid token"
+                });
+            }
+
+            var teammates = await _userService.GetTeammatesAsync(userId.Value, companyId.Value);
+
+            var response = teammates.Select(user => new UserMentionResponse
+            {
+                UserId = user.Id,
+                Username = user.Username,
+                FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                Department = user.Department
+            }).ToList();
+
+            return Ok(new ApiResponse<List<UserMentionResponse>>
+            {
+                Success = true,
+                Message = $"Found {response.Count} teammates",
+                Data = response
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting recipients");
+            return StatusCode(500, new ApiResponse<List<UserMentionResponse>>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving teammates"
             });
         }
     }

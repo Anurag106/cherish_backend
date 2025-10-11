@@ -347,4 +347,131 @@ public class PostgreSQLUserProvider : IUserProvider
 
         return users;
     }
+
+    public async Task<List<User>> GetUserAutocompleteAsync(Guid companyId, string searchTerm, int limit = 3)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        var query = @"
+            SELECT id, username, password, email, first_name, last_name, role, status, team_id, 
+                   department, job_title, date_hired, date_of_birth, total_points, available_points,
+                   company_id, created_at, updated_at 
+            FROM users 
+            WHERE company_id = @company_id 
+              AND status = 0
+              AND (
+                  LOWER(first_name) LIKE LOWER(@search_term) || '%' 
+                  OR LOWER(last_name) LIKE LOWER(@search_term) || '%'
+                  OR LOWER(username) LIKE LOWER(@search_term) || '%'
+              )
+            ORDER BY 
+                CASE 
+                    WHEN LOWER(first_name) LIKE LOWER(@search_term) || '%' THEN 1
+                    WHEN LOWER(last_name) LIKE LOWER(@search_term) || '%' THEN 2
+                    ELSE 3
+                END,
+                first_name, last_name
+            LIMIT @limit";
+
+        using var command = new NpgsqlCommand(query, connection);
+        command.Parameters.AddWithValue("@company_id", companyId);
+        command.Parameters.AddWithValue("@search_term", searchTerm);
+        command.Parameters.AddWithValue("@limit", limit);
+
+        var users = new List<User>();
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            users.Add(new User
+            {
+                Id = reader.GetGuid(0),
+                Username = reader.GetString(1),
+                Password = reader.GetString(2),
+                Email = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                FirstName = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                LastName = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                Role = (UserRole)reader.GetInt32(6),
+                Status = (UserStatus)reader.GetInt32(7),
+                TeamId = reader.IsDBNull(8) ? null : reader.GetGuid(8),
+                Department = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
+                JobTitle = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
+                DateHired = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+                DateOfBirth = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
+                TotalPoints = reader.GetInt32(13),
+                AvailablePoints = reader.GetInt32(14),
+                CompanyId = reader.GetGuid(15),
+                CreatedAt = reader.GetDateTime(16),
+                UpdatedAt = reader.GetDateTime(17)
+            });
+        }
+
+        return users;
+    }
+
+    public async Task<List<User>> GetTeammatesAsync(Guid userId, Guid companyId)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        // First get the user's team_id
+        var getTeamQuery = "SELECT team_id FROM users WHERE id = @user_id";
+        using var getTeamCommand = new NpgsqlCommand(getTeamQuery, connection);
+        getTeamCommand.Parameters.AddWithValue("@user_id", userId);
+
+        var teamId = await getTeamCommand.ExecuteScalarAsync() as Guid?;
+        
+        if (!teamId.HasValue)
+        {
+            return new List<User>(); // User has no team, return empty list
+        }
+
+        // Get all users in the same team except the requesting user
+        var query = @"
+            SELECT id, username, password, email, first_name, last_name, role, status, team_id, 
+                   department, job_title, date_hired, date_of_birth, total_points, available_points,
+                   company_id, created_at, updated_at 
+            FROM users 
+            WHERE company_id = @company_id 
+              AND team_id = @team_id 
+              AND id != @user_id
+              AND status = 0
+            ORDER BY first_name, last_name";
+
+        using var command = new NpgsqlCommand(query, connection);
+        command.Parameters.AddWithValue("@company_id", companyId);
+        command.Parameters.AddWithValue("@team_id", teamId.Value);
+        command.Parameters.AddWithValue("@user_id", userId);
+
+        var users = new List<User>();
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            users.Add(new User
+            {
+                Id = reader.GetGuid(0),
+                Username = reader.GetString(1),
+                Password = reader.GetString(2),
+                Email = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                FirstName = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                LastName = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                Role = (UserRole)reader.GetInt32(6),
+                Status = (UserStatus)reader.GetInt32(7),
+                TeamId = reader.IsDBNull(8) ? null : reader.GetGuid(8),
+                Department = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
+                JobTitle = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
+                DateHired = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+                DateOfBirth = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
+                TotalPoints = reader.GetInt32(13),
+                AvailablePoints = reader.GetInt32(14),
+                CompanyId = reader.GetGuid(15),
+                CreatedAt = reader.GetDateTime(16),
+                UpdatedAt = reader.GetDateTime(17)
+            });
+        }
+
+        return users;
+    }
 }

@@ -81,6 +81,7 @@ builder.Services.AddScoped<IPostProvider, PostgreSQLPostProvider>();
 builder.Services.AddScoped<ICommentProvider, PostgreSQLCommentProvider>();
 builder.Services.AddScoped<IReactionProvider, PostgreSQLReactionProvider>();
 builder.Services.AddScoped<IFollowProvider, PostgreSQLFollowProvider>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IHashtagService, HashtagService>();

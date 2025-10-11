@@ -7,8 +7,9 @@ using System.Security.Claims;
 
 namespace Cherish.RestApi.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class HashtagController : ControllerBase
 {
@@ -69,11 +70,6 @@ public class HashtagController : ControllerBase
                 Id = hashtag.Id,
                 Name = hashtag.Name,
                 Description = hashtag.Description,
-                CompanyId = hashtag.CompanyId,
-                CreatedBy = hashtag.CreatedBy,
-                CreatedDate = hashtag.CreatedDate,
-                ModifiedBy = hashtag.ModifiedBy,
-                ModifiedDate = hashtag.ModifiedDate
             };
 
             return Ok(new ApiResponse<HashtagResponse>
@@ -115,11 +111,6 @@ public class HashtagController : ControllerBase
                 Id = hashtag.Id,
                 Name = hashtag.Name,
                 Description = hashtag.Description,
-                CompanyId = hashtag.CompanyId,
-                CreatedBy = hashtag.CreatedBy,
-                CreatedDate = hashtag.CreatedDate,
-                ModifiedBy = hashtag.ModifiedBy,
-                ModifiedDate = hashtag.ModifiedDate
             };
 
             return Ok(new ApiResponse<HashtagResponse>
@@ -173,11 +164,6 @@ public class HashtagController : ControllerBase
                 Id = hashtag.Id,
                 Name = hashtag.Name,
                 Description = hashtag.Description,
-                CompanyId = hashtag.CompanyId,
-                CreatedBy = hashtag.CreatedBy,
-                CreatedDate = hashtag.CreatedDate,
-                ModifiedBy = hashtag.ModifiedBy,
-                ModifiedDate = hashtag.ModifiedDate
             };
 
             return Ok(new ApiResponse<HashtagResponse>
@@ -198,7 +184,7 @@ public class HashtagController : ControllerBase
         }
     }
 
-    [HttpGet("company")]
+    [HttpGet]
     public async Task<ActionResult<ApiResponse<List<HashtagResponse>>>> GetHashtagsByCompany()
     {
         try
@@ -222,11 +208,6 @@ public class HashtagController : ControllerBase
                 Id = h.Id,
                 Name = h.Name,
                 Description = h.Description,
-                CompanyId = h.CompanyId,
-                CreatedBy = h.CreatedBy,
-                CreatedDate = h.CreatedDate,
-                ModifiedBy = h.ModifiedBy,
-                ModifiedDate = h.ModifiedDate
             }).ToList();
 
             return Ok(new ApiResponse<List<HashtagResponse>>
@@ -259,11 +240,6 @@ public class HashtagController : ControllerBase
                 Id = h.Id,
                 Name = h.Name,
                 Description = h.Description,
-                CompanyId = h.CompanyId,
-                CreatedBy = h.CreatedBy,
-                CreatedDate = h.CreatedDate,
-                ModifiedBy = h.ModifiedBy,
-                ModifiedDate = h.ModifiedDate
             }).ToList();
 
             return Ok(new ApiResponse<List<HashtagResponse>>
@@ -296,11 +272,6 @@ public class HashtagController : ControllerBase
                 Id = h.Id,
                 Name = h.Name,
                 Description = h.Description,
-                CompanyId = h.CompanyId,
-                CreatedBy = h.CreatedBy,
-                CreatedDate = h.CreatedDate,
-                ModifiedBy = h.ModifiedBy,
-                ModifiedDate = h.ModifiedDate
             }).ToList();
 
             return Ok(new ApiResponse<List<HashtagResponse>>
@@ -363,11 +334,6 @@ public class HashtagController : ControllerBase
                 Id = hashtag.Id,
                 Name = hashtag.Name,
                 Description = hashtag.Description,
-                CompanyId = hashtag.CompanyId,
-                CreatedBy = hashtag.CreatedBy,
-                CreatedDate = hashtag.CreatedDate,
-                ModifiedBy = hashtag.ModifiedBy,
-                ModifiedDate = hashtag.ModifiedDate
             };
 
             return Ok(new ApiResponse<HashtagResponse>

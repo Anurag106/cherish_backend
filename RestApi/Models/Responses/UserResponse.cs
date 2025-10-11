@@ -38,3 +38,11 @@ public class UserListResponse
     public int AvailablePoints { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+
+public class UserMentionResponse
+{
+    public Guid UserId { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Department { get; set; } = string.Empty;
+}

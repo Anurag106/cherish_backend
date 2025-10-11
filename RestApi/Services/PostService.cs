@@ -157,12 +157,20 @@ public class PostService : IPostService
             }
 
             // Parse mentions, hashtags, and points from context
-            var parsedData = await _contentParsingService.ParsePostContentAsync(context, companyId);
+            // This will get user IDs from usernames and hashtag IDs from hashtag names
+            // If a hashtag doesn't exist, it will be created automatically
+            var parsedData = await _contentParsingService.ParsePostContentAsync(context, companyId, userId);
             
             result.UserMentioned = parsedData.UserMentioned;
             result.Hashtags = parsedData.Hashtags;
             result.TotalPoints = parsedData.TotalPoints;
             result.ParsedContext = parsedData.ParsedContent;
+
+            // Check if any mentioned usernames were not found
+            if (parsedData.NotFoundUsernames.Any())
+            {
+                result.MissingItems.Add($"User(s) not found: {string.Join(", ", parsedData.NotFoundUsernames)}");
+            }
 
             // Validate that poster is not in mentioned users
             if (result.UserMentioned.Contains(userId))
@@ -170,30 +178,10 @@ public class PostService : IPostService
                 result.InvalidItems.Add("Poster cannot mention themselves");
             }
 
-            // Validate mentioned users exist and are in the same company
-            var missingUsers = new List<string>();
-            var invalidUsers = new List<string>();
-            foreach (var mentionedUserId in result.UserMentioned)
+            // Check if no valid users were mentioned but post requires mentions
+            if (!result.UserMentioned.Any() && !parsedData.NotFoundUsernames.Any())
             {
-                var user = await _userProvider.GetUserByIdAsync(mentionedUserId);
-                if (user == null)
-                {
-                    missingUsers.Add(mentionedUserId.ToString());
-                }
-                else if (user.CompanyId != companyId)
-                {
-                    invalidUsers.Add(user.Username);
-                }
-            }
-
-            if (missingUsers.Any())
-            {
-                result.MissingItems.Add($"Users not found: {string.Join(", ", missingUsers)}");
-            }
-
-            if (invalidUsers.Any())
-            {
-                result.InvalidItems.Add($"Users from different company: {string.Join(", ", invalidUsers)}");
+                result.MissingItems.Add("Must mention at least one user (e.g., @username)");
             }
 
             // Note: Hashtags are already validated during parsing in ContentParsingService
@@ -261,14 +249,14 @@ public class PostService : IPostService
     }
 
 
-    private string CreateMetadata((List<Guid> UserMentioned, List<int> Hashtags, int TotalPoints, string ParsedContext) parsedData)
+    private string CreateMetadata((List<Guid> UserMentioned, List<int> Hashtags, int TotalPoints, string ParsedContent, List<string> NotFoundUsernames) parsedData)
     {
         var metadata = new
         {
             ParsedUserMentions = parsedData.UserMentioned.Count,
             ParsedHashtags = parsedData.Hashtags.Count,
             TotalPointsCalculated = parsedData.TotalPoints,
-            OriginalContextLength = parsedData.ParsedContext.Length
+            OriginalContextLength = parsedData.ParsedContent.Length
         };
 
         return System.Text.Json.JsonSerializer.Serialize(metadata);
@@ -330,7 +318,15 @@ public class PostService : IPostService
             }
 
             // Parse the new content to extract mentions and points
-            var newContentParse = await _contentParsingService.ParsePostContentAsync(content, existingPost.CompanyId);
+            var newContentParse = await _contentParsingService.ParsePostContentAsync(content, existingPost.CompanyId, userId);
+
+            // Check if any mentioned usernames were not found
+            if (newContentParse.NotFoundUsernames.Any())
+            {
+                _logger.LogWarning("Cannot update post {PostId}: User(s) not found: {Usernames}", 
+                    id, string.Join(", ", newContentParse.NotFoundUsernames));
+                return null;
+            }
 
             // Validate that mentions haven't changed (order doesn't matter)
             var originalMentionsSorted = existingPost.UserMentioned.OrderBy(x => x).ToList();
