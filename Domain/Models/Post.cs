@@ -31,7 +31,8 @@ public enum PostSortOrder
 public class PostWithDetails
 {
     public Post Post { get; set; } = new();
-    public List<Comment> LatestComments { get; set; } = new();
+    public string UserFullName { get; set; } = string.Empty;
+    public List<CommentWithUserInfo> LatestComments { get; set; } = new();
     public Dictionary<ReactionType, int> ReactionCounts { get; set; } = new();
     public Reaction? UserReaction { get; set; }
 }

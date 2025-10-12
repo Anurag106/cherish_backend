@@ -8,18 +8,18 @@ namespace Provider;
 
 public class PostgreSQLUserProvider : IUserProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLUserProvider(IConfiguration configuration)
+    public PostgreSQLUserProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
     }
 
 
 
     public async Task<User?> GetUserByUsernameAsync(string username)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -62,7 +62,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<User> CreateUserAsync(string username, string password, Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -124,7 +124,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<User?> GetUserByIdAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -169,7 +169,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<bool> UpdateUserPasswordAsync(string username, string newPassword)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "UPDATE users SET password = @password, updated_at = CURRENT_TIMESTAMP WHERE username = @username";
@@ -183,7 +183,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<bool> DeleteUserAsync(string username)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "DELETE FROM users WHERE username = @username";
@@ -196,7 +196,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<List<User>> GetUsersByCompanyIdAsync(Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -243,7 +243,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<bool> UpdateUserPointsAsync(Guid userId, int newTotalPoints, int newAvailablePoints)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -262,7 +262,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<List<User>> GetUsersAsync(Guid companyId, List<Guid>? userIds = null, UserStatus? status = null, Guid? teamId = null, UserRole? role = null, int pageNumber = 1, int pageSize = 20)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var whereConditions = new List<string> { "company_id = @company_id" };
@@ -350,7 +350,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<List<User>> GetUserAutocompleteAsync(Guid companyId, string searchTerm, int limit = 3)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -412,7 +412,7 @@ public class PostgreSQLUserProvider : IUserProvider
 
     public async Task<List<User>> GetTeammatesAsync(Guid userId, Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         // First get the user's team_id

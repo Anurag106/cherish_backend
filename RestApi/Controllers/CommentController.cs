@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Cherish.RestApi.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class CommentController : ControllerBase
 {
@@ -25,7 +26,7 @@ public class CommentController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("create")]
+    [HttpPost]
     public async Task<ActionResult<ApiResponse<CommentResponse>>> CreateComment([FromBody] CreateCommentRequest request)
     {
         try

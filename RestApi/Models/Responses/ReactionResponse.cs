@@ -8,7 +8,7 @@ public class ReactionResponse
     public Guid CompanyId { get; set; }
     public Guid UserId { get; set; }
     public Guid PostId { get; set; }
-    public ReactionType EmojiType { get; set; }
+    public string EmojiType { get; set; } = string.Empty;
     public DateTime LastModifiedAt { get; set; }
 }
 

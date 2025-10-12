@@ -7,17 +7,17 @@ namespace Provider;
 
 public class PostgreSQLTeamProvider : ITeamProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLTeamProvider(IConfiguration configuration)
+    public PostgreSQLTeamProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
     }
 
 
     public async Task<Team?> GetTeamByIdAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -50,7 +50,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<Team?> GetTeamByNameAsync(string name)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -83,7 +83,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<List<Team>> GetTeamsByCompanyIdAsync(Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -119,7 +119,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<List<Team>> GetTeamsByManagerIdAsync(Guid managerId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -155,7 +155,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<Team> CreateTeamAsync(string name, Guid managerId, Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -191,7 +191,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<Team> UpdateTeamAsync(Guid id, string name, Guid managerId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -227,7 +227,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<bool> DeleteTeamAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "DELETE FROM teams WHERE id = @id";
@@ -240,7 +240,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<bool> AddEmployeeToTeamAsync(Guid teamId, Guid employeeId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         // First get the current team to check if employee already exists
@@ -283,7 +283,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<bool> RemoveEmployeeFromTeamAsync(Guid teamId, Guid employeeId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         // First get the current team to check if employee exists
@@ -324,7 +324,7 @@ public class PostgreSQLTeamProvider : ITeamProvider
 
     public async Task<List<Team>> GetAllTeamsAsync()
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"

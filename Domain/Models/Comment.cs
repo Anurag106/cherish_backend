@@ -17,6 +17,12 @@ public class Comment
     public bool Deleted { get; set; } = false;
 }
 
+public class CommentWithUserInfo
+{
+    public Comment Comment { get; set; } = new();
+    public string UserFullName { get; set; } = string.Empty;
+}
+
 public class CommentParseResult
 {
     public List<Guid> UserMentioned { get; set; } = new();

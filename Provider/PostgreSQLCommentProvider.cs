@@ -9,16 +9,16 @@ namespace Provider;
 
 public class PostgreSQLCommentProvider : ICommentProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLCommentProvider(IConfiguration configuration)
+    public PostgreSQLCommentProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
     }
 
     public async Task<Comment?> GetCommentByIdAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -52,7 +52,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<List<Comment>> GetCommentsByPostIdAsync(Guid postId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -89,7 +89,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<List<Comment>> GetCommentsByUserIdAsync(Guid userId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -126,7 +126,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<List<Comment>> GetCommentsByCompanyIdAsync(Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -163,7 +163,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<Comment> CreateCommentAsync(Guid userId, bool postedByAdded, Guid companyId, string content, int points, Guid postId, List<int> hashtags, string metadata)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -179,7 +179,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
         command.Parameters.AddWithValue("@points", points);
         command.Parameters.AddWithValue("@post_id", postId);
         command.Parameters.Add("@hashtags", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(hashtags);
-        command.Parameters.AddWithValue("@metadata", metadata);
+        command.Parameters.Add("@metadata", NpgsqlDbType.Jsonb).Value = metadata;
 
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
@@ -204,7 +204,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<Comment?> UpdateCommentAsync(Guid id, string content, int points, List<int> hashtags, string metadata)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -218,7 +218,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
         command.Parameters.AddWithValue("@content", content);
         command.Parameters.AddWithValue("@points", points);
         command.Parameters.Add("@hashtags", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(hashtags);
-        command.Parameters.AddWithValue("@metadata", metadata);
+        command.Parameters.Add("@metadata", NpgsqlDbType.Jsonb).Value = metadata;
 
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
@@ -243,7 +243,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<bool> DeleteCommentAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "DELETE FROM comments WHERE id = @id";
@@ -256,7 +256,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<List<Comment>> GetCommentsByPostIdWithPaginationAsync(Guid postId, int page, int pageSize)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var offset = (page - 1) * pageSize;
@@ -297,7 +297,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<bool> SoftDeleteCommentAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "UPDATE comments SET deleted = true WHERE id = @id";
@@ -310,7 +310,7 @@ public class PostgreSQLCommentProvider : ICommentProvider
 
     public async Task<Comment?> UpdateCommentContentAsync(Guid id, string content, List<int> hashtags)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"

@@ -4,6 +4,7 @@ public class CommentResponse
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public string UserFullName { get; set; } = string.Empty;
     public bool PostedByAdded { get; set; }
     public Guid CompanyId { get; set; }
     public string Content { get; set; } = string.Empty;

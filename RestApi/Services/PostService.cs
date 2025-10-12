@@ -373,6 +373,7 @@ public class PostService : IPostService
             // Create tasks for parallel execution of independent operations
             var commentsTask = _commentProvider.GetCommentsByPostIdWithPaginationAsync(postId, 1, 2);
             var reactionCountsTask = _reactionService.GetReactionCountsByPostIdAsync(postId);
+            var postUserTask = _userProvider.GetUserByIdAsync(post.UserId);
             
             // Create user reaction task only if userId is provided
             var userReactionTask = userId.HasValue 
@@ -380,17 +381,39 @@ public class PostService : IPostService
                 : Task.FromResult<Reaction?>(null);
 
             // Wait for all tasks to complete in parallel
-            await Task.WhenAll(commentsTask, reactionCountsTask, userReactionTask);
+            await Task.WhenAll(commentsTask, reactionCountsTask, postUserTask, userReactionTask);
 
             // Extract results
             var latestComments = await commentsTask;
             var reactionCounts = await reactionCountsTask;
+            var postUser = await postUserTask;
             var userReaction = await userReactionTask;
+            
+            var userFullName = postUser != null 
+                ? $"{postUser.FirstName} {postUser.LastName}".Trim()
+                : string.Empty;
+
+            // Fetch user info for comments
+            var commentsWithUserInfo = new List<CommentWithUserInfo>();
+            foreach (var comment in latestComments)
+            {
+                var commentUser = await _userProvider.GetUserByIdAsync(comment.UserId);
+                var commentUserFullName = commentUser != null 
+                    ? $"{commentUser.FirstName} {commentUser.LastName}".Trim()
+                    : string.Empty;
+                
+                commentsWithUserInfo.Add(new CommentWithUserInfo
+                {
+                    Comment = comment,
+                    UserFullName = commentUserFullName
+                });
+            }
 
             return new PostWithDetails
             {
                 Post = post,
-                LatestComments = latestComments,
+                UserFullName = userFullName,
+                LatestComments = commentsWithUserInfo,
                 ReactionCounts = reactionCounts,
                 UserReaction = userReaction
             };
@@ -448,33 +471,67 @@ public class PostService : IPostService
             // Calculate pagination info
             var hasPreviousPage = cursor != null;
 
-            // Get details for each post in parallel
+            // Get details for each post with controlled parallelism to avoid overwhelming the connection pool
+            var postDetails = new List<PostWithDetails>();
+            var semaphore = new SemaphoreSlim(2); // Limit to 5 concurrent database operations
+            
             var postDetailsTasks = posts.Select(async post =>
             {
-                // Create tasks for parallel execution
-                var commentsTask = _commentProvider.GetCommentsByPostIdWithPaginationAsync(post.Id, 1, 2);
-                var reactionCountsTask = _reactionService.GetReactionCountsByPostIdAsync(post.Id);
-                var userReactionTask = _reactionService.GetUserReactionForPostAsync(userId, post.Id);
-
-                // Wait for all tasks to complete
-                await Task.WhenAll(commentsTask, reactionCountsTask, userReactionTask);
-
-                // Extract results
-                var latestComments = await commentsTask;
-                var reactionCounts = await reactionCountsTask;
-                var userReaction = await userReactionTask;
-
-                return new PostWithDetails
+                await semaphore.WaitAsync();
+                try
                 {
-                    Post = post,
-                    LatestComments = latestComments,
-                    ReactionCounts = reactionCounts,
-                    UserReaction = userReaction
-                };
+                    // Create tasks for parallel execution (4 queries per post)
+                    var commentsTask = _commentProvider.GetCommentsByPostIdWithPaginationAsync(post.Id, 1, 2);
+                    var reactionCountsTask = _reactionService.GetReactionCountsByPostIdAsync(post.Id);
+                    var userReactionTask = _reactionService.GetUserReactionForPostAsync(userId, post.Id);
+                    var postUserTask = _userProvider.GetUserByIdAsync(post.UserId);
+
+                    // Wait for all tasks to complete
+                    await Task.WhenAll(commentsTask, reactionCountsTask, userReactionTask, postUserTask);
+
+                    // Extract results
+                    var latestComments = await commentsTask;
+                    var reactionCounts = await reactionCountsTask;
+                    var userReaction = await userReactionTask;
+                    var postUser = await postUserTask;
+                    
+                    var userFullName = postUser != null 
+                        ? $"{postUser.FirstName} {postUser.LastName}".Trim()
+                        : string.Empty;
+
+                    // Fetch user info for comments
+                    var commentsWithUserInfo = new List<CommentWithUserInfo>();
+                    foreach (var comment in latestComments)
+                    {
+                        var commentUser = await _userProvider.GetUserByIdAsync(comment.UserId);
+                        var commentUserFullName = commentUser != null 
+                            ? $"{commentUser.FirstName} {commentUser.LastName}".Trim()
+                            : string.Empty;
+                        
+                        commentsWithUserInfo.Add(new CommentWithUserInfo
+                        {
+                            Comment = comment,
+                            UserFullName = commentUserFullName
+                        });
+                    }
+
+                    return new PostWithDetails
+                    {
+                        Post = post,
+                        UserFullName = userFullName,
+                        LatestComments = commentsWithUserInfo,
+                        ReactionCounts = reactionCounts,
+                        UserReaction = userReaction
+                    };
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
             });
 
             // Wait for all post details to complete
-            var postDetails = await Task.WhenAll(postDetailsTasks);
+            postDetails = (await Task.WhenAll(postDetailsTasks)).ToList();
 
             // Generate cursors for next and previous pages
             string? nextCursor = null;

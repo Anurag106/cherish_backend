@@ -7,18 +7,18 @@ namespace Provider;
 
 public class PostgreSQLHashtagProvider : IHashtagProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLHashtagProvider(IConfiguration configuration)
+    public PostgreSQLHashtagProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
 
     }
 
 
     public async Task<Hashtag?> GetHashtagByIdAsync(int id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -50,7 +50,7 @@ public class PostgreSQLHashtagProvider : IHashtagProvider
 
     public async Task<Hashtag?> GetHashtagByNameAsync(string name, Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -83,7 +83,7 @@ public class PostgreSQLHashtagProvider : IHashtagProvider
 
     public async Task<List<Hashtag>> GetAllHashtagsAsync()
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -116,7 +116,7 @@ public class PostgreSQLHashtagProvider : IHashtagProvider
 
     public async Task<List<Hashtag>> GetHashtagsByCompanyIdAsync(Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -151,7 +151,7 @@ public class PostgreSQLHashtagProvider : IHashtagProvider
 
     public async Task<List<Hashtag>> GetHashtagsByCreatedByAsync(Guid createdBy)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -186,7 +186,7 @@ public class PostgreSQLHashtagProvider : IHashtagProvider
 
     public async Task<Hashtag> CreateHashtagAsync(string name, string description, Guid companyId, Guid createdBy)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -221,7 +221,7 @@ public class PostgreSQLHashtagProvider : IHashtagProvider
 
     public async Task<Hashtag?> UpdateHashtagAsync(int id, string name, string description, Guid modifiedBy)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -257,7 +257,7 @@ public class PostgreSQLHashtagProvider : IHashtagProvider
 
     public async Task<bool> DeleteHashtagAsync(int id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "DELETE FROM hashtags WHERE id = @id";

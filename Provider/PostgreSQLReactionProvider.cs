@@ -7,16 +7,16 @@ namespace Provider;
 
 public class PostgreSQLReactionProvider : IReactionProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLReactionProvider(IConfiguration configuration)
+    public PostgreSQLReactionProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
     }
 
     public async Task<Reaction?> GetReactionByIdAsync(long id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -46,7 +46,7 @@ public class PostgreSQLReactionProvider : IReactionProvider
 
     public async Task<Reaction?> GetUserReactionForPostAsync(Guid userId, Guid postId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -77,7 +77,7 @@ public class PostgreSQLReactionProvider : IReactionProvider
 
     public async Task<List<Reaction>> GetReactionsByPostIdAsync(Guid postId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -110,7 +110,7 @@ public class PostgreSQLReactionProvider : IReactionProvider
 
     public async Task<Dictionary<ReactionType, int>> GetReactionCountsByPostIdAsync(Guid postId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -146,7 +146,7 @@ public class PostgreSQLReactionProvider : IReactionProvider
 
     public async Task<List<Reaction>> GetReactionsByCompanyIdAsync(Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -179,7 +179,7 @@ public class PostgreSQLReactionProvider : IReactionProvider
 
     public async Task<List<Reaction>> GetReactionsByUserIdAsync(Guid userId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -212,7 +212,7 @@ public class PostgreSQLReactionProvider : IReactionProvider
 
     public async Task<Reaction> CreateOrUpdateReactionAsync(Guid companyId, Guid userId, Guid postId, ReactionType emojiType)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         // Use UPSERT (INSERT ... ON CONFLICT ... DO UPDATE)
@@ -251,7 +251,7 @@ public class PostgreSQLReactionProvider : IReactionProvider
 
     public async Task<bool> DeleteReactionAsync(long id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "DELETE FROM reactions WHERE id = @id";
@@ -264,7 +264,7 @@ public class PostgreSQLReactionProvider : IReactionProvider
 
     public async Task<bool> DeleteUserReactionForPostAsync(Guid userId, Guid postId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "DELETE FROM reactions WHERE user_id = @user_id AND post_id = @post_id";

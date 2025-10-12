@@ -8,17 +8,17 @@ namespace Provider;
 
 public class PostgreSQLFollowProvider : IFollowProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLFollowProvider(IConfiguration configuration)
+    public PostgreSQLFollowProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
     }
 
     // User-to-User Follow Operations
     public async Task<UserFollowUser?> GetUserFollowUserAsync(Guid companyId, Guid followerUserId, Guid followeeUserId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -50,7 +50,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<UserFollowUser> CreateOrUpdateUserFollowUserAsync(Guid companyId, Guid followerUserId, Guid followeeUserId, bool isFollowing)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -83,7 +83,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<List<UserFollowInfo>> GetUserFollowingUsersAsync(Guid companyId, Guid followerUserId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -120,7 +120,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<List<UserFollowInfo>> GetUserFollowersAsync(Guid companyId, Guid followeeUserId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -158,7 +158,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
     // User-to-Team Follow Operations
     public async Task<UserFollowTeam?> GetUserFollowTeamAsync(Guid companyId, Guid followerUserId, Guid followeeTeamId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -190,7 +190,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<UserFollowTeam> CreateOrUpdateUserFollowTeamAsync(Guid companyId, Guid followerUserId, Guid followeeTeamId, bool isFollowing)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -223,7 +223,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<List<TeamFollowInfo>> GetUserFollowingTeamsAsync(Guid companyId, Guid followerUserId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -263,7 +263,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<List<UserFollowInfo>> GetTeamFollowersAsync(Guid companyId, Guid followeeTeamId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -301,7 +301,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
     // Validation Methods
     public async Task<bool> IsUserInSameCompanyAsync(Guid userId1, Guid userId2)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -319,7 +319,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<bool> IsUserInCompanyAsync(Guid userId, Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "SELECT COUNT(*) FROM users WHERE id = @user_id AND company_id = @company_id";
@@ -333,7 +333,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<bool> IsTeamInCompanyAsync(Guid teamId, Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "SELECT COUNT(*) FROM teams WHERE id = @team_id AND company_id = @company_id";
@@ -347,7 +347,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
 
     public async Task<bool> IsUserInTeamAsync(Guid userId, Guid teamId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "SELECT COUNT(*) FROM users WHERE id = @user_id AND team_id = @team_id";

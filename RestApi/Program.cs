@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using Provider;
 using System.Text;
 
@@ -70,6 +71,12 @@ builder.Services.AddCors(options =>
 
 // Configure PostgreSQL connection string
 builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
+
+// Configure NpgsqlDataSource with EnableDynamicJson for JSON/JSONB support
+var connectionString = DatabaseConnectionManager.GetConnectionString(builder.Configuration);
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+dataSourceBuilder.EnableDynamicJson();
+builder.Services.AddSingleton(dataSourceBuilder.Build());
 
 // Register services
 builder.Services.AddScoped<IUserProvider, PostgreSQLUserProvider>();

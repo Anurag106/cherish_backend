@@ -7,18 +7,18 @@ namespace Provider;
 
 public class PostgreSQLTransactionProvider : ITransactionProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLTransactionProvider(IConfiguration configuration)
+    public PostgreSQLTransactionProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
 
     }
 
 
     public async Task<Transaction?> GetTransactionByIdAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -49,7 +49,7 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
 
     public async Task<List<Transaction>> GetTransactionsByCompanyIdAsync(Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -83,7 +83,7 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
 
     public async Task<List<Transaction>> GetTransactionsByFromUserIdAsync(Guid fromUserId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -117,7 +117,7 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
 
     public async Task<List<Transaction>> GetTransactionsByToUserIdAsync(Guid toUserId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -151,7 +151,7 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
 
     public async Task<List<Transaction>> GetTransactionsByUserIdAsync(Guid userId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -185,7 +185,7 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
 
     public async Task<Transaction> CreateTransactionAsync(Guid companyId, Guid fromUserId, Guid toUserId, int points, string? description = null)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -220,7 +220,7 @@ public class PostgreSQLTransactionProvider : ITransactionProvider
 
     public async Task<List<Transaction>> GetAllTransactionsAsync()
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"

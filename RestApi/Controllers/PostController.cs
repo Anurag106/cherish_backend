@@ -501,6 +501,7 @@ public class PostController : ControllerBase
             {
                 Id = postWithDetails.Post.Id,
                 UserId = postWithDetails.Post.UserId,
+                UserFullName = postWithDetails.UserFullName,
                 CompanyId = postWithDetails.Post.CompanyId,
                 Context = postWithDetails.Post.Context,
                 UserMentioned = postWithDetails.Post.UserMentioned,
@@ -512,17 +513,18 @@ public class PostController : ControllerBase
                 Deleted = postWithDetails.Post.Deleted,
                 LatestComments = postWithDetails.LatestComments.Select(c => new CommentResponse
                 {
-                    Id = c.Id,
-                    UserId = c.UserId,
-                    PostedByAdded = c.PostedByAdded,
-                    CompanyId = c.CompanyId,
-                    Content = c.Content,
-                    Points = c.Points,
-                    PostId = c.PostId,
-                    Hashtags = c.Hashtags,
-                    CreatedAt = c.CreatedAt,
-                    Metadata = c.Metadata,
-                    Deleted = c.Deleted
+                    Id = c.Comment.Id,
+                    UserId = c.Comment.UserId,
+                    UserFullName = c.UserFullName,
+                    PostedByAdded = c.Comment.PostedByAdded,
+                    CompanyId = c.Comment.CompanyId,
+                    Content = c.Comment.Content,
+                    Points = c.Comment.Points,
+                    PostId = c.Comment.PostId,
+                    Hashtags = c.Comment.Hashtags,
+                    CreatedAt = c.Comment.CreatedAt,
+                    Metadata = c.Comment.Metadata,
+                    Deleted = c.Comment.Deleted
                 }).ToList(),
                 ReactionCounts = new ReactionCountsResponse
                 {
@@ -535,7 +537,7 @@ public class PostController : ControllerBase
                     CompanyId = postWithDetails.UserReaction.CompanyId,
                     UserId = postWithDetails.UserReaction.UserId,
                     PostId = postWithDetails.UserReaction.PostId,
-                    EmojiType = postWithDetails.UserReaction.EmojiType,
+                    EmojiType = postWithDetails.UserReaction.EmojiType.ToString(),
                     LastModifiedAt = postWithDetails.UserReaction.LastModifiedAt
                 } : null
             };
@@ -558,8 +560,8 @@ public class PostController : ControllerBase
         }
     }
 
-    [HttpPost("filter")]
-    public async Task<ActionResult<ApiResponse<PaginatedPostResponse>>> GetFilteredPosts([FromBody] Domain.Models.PostFilterRequest request)
+    [HttpGet()]
+    public async Task<ActionResult<ApiResponse<PaginatedPostResponse>>> GetFilteredPosts([FromQuery] Domain.Models.PostFilterRequest request)
     {
         try
         {
@@ -583,6 +585,7 @@ public class PostController : ControllerBase
                 {
                     Id = p.Post.Id,
                     UserId = p.Post.UserId,
+                    UserFullName = p.UserFullName,
                     CompanyId = p.Post.CompanyId,
                     Context = p.Post.Context,
                     UserMentioned = p.Post.UserMentioned,
@@ -594,17 +597,18 @@ public class PostController : ControllerBase
                     Deleted = p.Post.Deleted,
                     LatestComments = p.LatestComments.Select(c => new CommentResponse
                     {
-                        Id = c.Id,
-                        UserId = c.UserId,
-                        PostedByAdded = c.PostedByAdded,
-                        CompanyId = c.CompanyId,
-                        Content = c.Content,
-                        Points = c.Points,
-                        PostId = c.PostId,
-                        Hashtags = c.Hashtags,
-                        CreatedAt = c.CreatedAt,
-                        Metadata = c.Metadata,
-                        Deleted = c.Deleted
+                        Id = c.Comment.Id,
+                        UserId = c.Comment.UserId,
+                        UserFullName = c.UserFullName,
+                        PostedByAdded = c.Comment.PostedByAdded,
+                        CompanyId = c.Comment.CompanyId,
+                        Content = c.Comment.Content,
+                        Points = c.Comment.Points,
+                        PostId = c.Comment.PostId,
+                        Hashtags = c.Comment.Hashtags,
+                        CreatedAt = c.Comment.CreatedAt,
+                        Metadata = c.Comment.Metadata,
+                        Deleted = c.Comment.Deleted
                     }).ToList(),
                     ReactionCounts = new ReactionCountsResponse
                     {
@@ -617,7 +621,7 @@ public class PostController : ControllerBase
                         CompanyId = p.UserReaction.CompanyId,
                         UserId = p.UserReaction.UserId,
                         PostId = p.UserReaction.PostId,
-                        EmojiType = p.UserReaction.EmojiType,
+                        EmojiType = p.UserReaction.EmojiType.ToString(),
                         LastModifiedAt = p.UserReaction.LastModifiedAt
                     } : null
                 }).ToList(),

@@ -9,18 +9,18 @@ namespace Provider;
 
 public class PostgreSQLPostProvider : IPostProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLPostProvider(IConfiguration configuration)
+    public PostgreSQLPostProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
 
     }
 
 
     public async Task<Post?> GetPostByIdAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -58,7 +58,7 @@ public class PostgreSQLPostProvider : IPostProvider
 
     public async Task<List<Post>> GetPostsByCompanyIdAsync(Guid companyId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -99,7 +99,7 @@ public class PostgreSQLPostProvider : IPostProvider
 
     public async Task<List<Post>> GetPostsByUserIdAsync(Guid userId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -140,7 +140,7 @@ public class PostgreSQLPostProvider : IPostProvider
 
     public async Task<List<Post>> GetPostsByMentionedUserAsync(Guid userId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -181,7 +181,7 @@ public class PostgreSQLPostProvider : IPostProvider
 
     public async Task<List<Post>> GetPostsByHashtagIdAsync(int hashtagId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -222,7 +222,7 @@ public class PostgreSQLPostProvider : IPostProvider
 
     public async Task<List<Post>> GetAllPostsAsync()
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -261,7 +261,7 @@ public class PostgreSQLPostProvider : IPostProvider
 
     public async Task<Post> CreatePostAsync(Guid userId, Guid companyId, string context, List<Guid> userMentioned, List<int> hashtags, string metadata, int totalPoints, PostVisibility visibility)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -306,7 +306,7 @@ public class PostgreSQLPostProvider : IPostProvider
 
     public async Task<bool> SoftDeletePostAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "UPDATE posts SET deleted = true WHERE id = @id";
@@ -319,7 +319,7 @@ public class PostgreSQLPostProvider : IPostProvider
 
     public async Task<Post?> UpdatePostContentAsync(Guid id, string content, List<int> hashtags)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -368,7 +368,7 @@ public class PostgreSQLPostProvider : IPostProvider
         List<int>? hashtagIds = null,
         PostSortOrder sortOrder = PostSortOrder.CreatedAtDesc)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var parameters = new List<NpgsqlParameter>

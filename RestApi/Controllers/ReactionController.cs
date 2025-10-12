@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Cherish.RestApi.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class ReactionController : ControllerBase
 {
@@ -25,7 +26,7 @@ public class ReactionController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("react")]
+    [HttpPost()]
     public async Task<ActionResult<ApiResponse<ReactionResponse>>> CreateOrUpdateReaction([FromBody] CreateReactionRequest request)
     {
         try
@@ -42,10 +43,20 @@ public class ReactionController : ControllerBase
                 });
             }
 
+            // Convert string emoji type to enum
+            if (!Enum.TryParse<Domain.Models.ReactionType>(request.ReactionType, true, out var emojiType))
+            {
+                return BadRequest(new ApiResponse<ReactionResponse>
+                {
+                    Success = false,
+                    Message = $"Invalid emoji type. Valid values are: {string.Join(", ", Enum.GetNames(typeof(Domain.Models.ReactionType)))}"
+                });
+            }
+
             var reaction = await _reactionService.CreateOrUpdateReactionAsync(
                 userId.Value,
                 request.PostId,
-                request.EmojiType
+                emojiType
             );
 
             if (reaction == null)
@@ -63,7 +74,7 @@ public class ReactionController : ControllerBase
                 CompanyId = reaction.CompanyId,
                 UserId = reaction.UserId,
                 PostId = reaction.PostId,
-                EmojiType = reaction.EmojiType,
+                EmojiType = reaction.EmojiType.ToString(),
                 LastModifiedAt = reaction.LastModifiedAt
             };
 
@@ -194,7 +205,7 @@ public class ReactionController : ControllerBase
                 CompanyId = reaction.CompanyId,
                 UserId = reaction.UserId,
                 PostId = reaction.PostId,
-                EmojiType = reaction.EmojiType,
+                EmojiType = reaction.EmojiType.ToString(),
                 LastModifiedAt = reaction.LastModifiedAt
             };
 

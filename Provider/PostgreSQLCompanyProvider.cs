@@ -7,18 +7,18 @@ namespace Provider;
 
 public class PostgreSQLCompanyProvider : ICompanyProvider
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgreSQLCompanyProvider(IConfiguration configuration)
+    public PostgreSQLCompanyProvider(NpgsqlDataSource dataSource)
     {
-        _connectionString = DatabaseConnectionManager.GetConnectionString(configuration);
+        _dataSource = dataSource;
     }
 
 
 
     public async Task<Company?> GetCompanyByIdAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "SELECT id, name, created_at, updated_at FROM companies WHERE id = @id";
@@ -42,7 +42,7 @@ public class PostgreSQLCompanyProvider : ICompanyProvider
 
     public async Task<Company?> GetCompanyByNameAsync(string name)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "SELECT id, name, created_at, updated_at FROM companies WHERE name = @name";
@@ -66,7 +66,7 @@ public class PostgreSQLCompanyProvider : ICompanyProvider
 
     public async Task<Company> CreateCompanyAsync(string name)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -94,7 +94,7 @@ public class PostgreSQLCompanyProvider : ICompanyProvider
 
     public async Task<Company> UpdateCompanyAsync(Guid id, string name)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = @"
@@ -124,7 +124,7 @@ public class PostgreSQLCompanyProvider : ICompanyProvider
 
     public async Task<bool> DeleteCompanyAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "DELETE FROM companies WHERE id = @id";
@@ -137,7 +137,7 @@ public class PostgreSQLCompanyProvider : ICompanyProvider
 
     public async Task<List<Company>> GetAllCompaniesAsync()
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _dataSource.CreateConnection();
         await connection.OpenAsync();
 
         var query = "SELECT id, name, created_at, updated_at FROM companies ORDER BY name";
