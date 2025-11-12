@@ -220,11 +220,10 @@ public class FollowController : ControllerBase
                     FollowingUsers = result.FollowingUsers.Select(u => new UserFollowInfoResponse
                     {
                         UserId = u.UserId,
-                        Username = u.Username,
                         FirstName = u.FirstName,
                         LastName = u.LastName,
                         Email = u.Email,
-                        Role = u.Role,
+                        Department = u.Department,
                         LastModified = u.LastModified
                     }).ToList(),
                     FollowingTeams = result.FollowingTeams.Select(t => new TeamFollowInfoResponse
@@ -239,11 +238,10 @@ public class FollowController : ControllerBase
                     Followers = result.Followers.Select(u => new UserFollowInfoResponse
                     {
                         UserId = u.UserId,
-                        Username = u.Username,
                         FirstName = u.FirstName,
                         LastName = u.LastName,
                         Email = u.Email,
-                        Role = u.Role,
+                        Department = u.Department,
                         LastModified = u.LastModified
                     }).ToList()
                 }
@@ -283,11 +281,10 @@ public class FollowController : ControllerBase
             var response = result.Select(u => new UserFollowInfoResponse
             {
                 UserId = u.UserId,
-                Username = u.Username,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 Email = u.Email,
-                Role = u.Role,
+                Department = u.Department,
                 LastModified = u.LastModified
             }).ToList();
 
@@ -380,11 +377,10 @@ public class FollowController : ControllerBase
             var response = result.Select(u => new UserFollowInfoResponse
             {
                 UserId = u.UserId,
-                Username = u.Username,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 Email = u.Email,
-                Role = u.Role,
+                Department = u.Department,
                 LastModified = u.LastModified
             }).ToList();
 

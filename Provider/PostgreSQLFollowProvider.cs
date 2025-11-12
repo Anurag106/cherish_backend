@@ -87,7 +87,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT u.id, u.username, u.first_name, u.last_name, u.email, u.role, uf.last_modified
+            SELECT u.id, u.first_name, u.last_name, u.email, u.department, uf.last_modified
             FROM user_follow_user uf
             JOIN users u ON u.id = uf.followee_user_id
             WHERE uf.company_id = @company_id 
@@ -107,12 +107,11 @@ public class PostgreSQLFollowProvider : IFollowProvider
             following.Add(new UserFollowInfo
             {
                 UserId = reader.GetGuid(0),
-                Username = reader.GetString(1),
-                FirstName = reader.GetString(2),
-                LastName = reader.GetString(3),
-                Email = reader.GetString(4),
-                Role = (UserRole)reader.GetInt32(5),
-                LastModified = reader.GetDateTime(6)
+                FirstName = reader.GetString(1),
+                LastName = reader.GetString(2),
+                Email = reader.GetString(3),
+                Department = reader.IsDBNull(4) ? null : reader.GetString(4),
+                LastModified = reader.GetDateTime(5)
             });
         }
         return following;
@@ -124,7 +123,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT u.id, u.username, u.first_name, u.last_name, u.email, u.role, uf.last_modified
+            SELECT u.id, u.first_name, u.last_name, u.email, u.department, uf.last_modified
             FROM user_follow_user uf
             JOIN users u ON u.id = uf.follower_user_id
             WHERE uf.company_id = @company_id 
@@ -144,12 +143,11 @@ public class PostgreSQLFollowProvider : IFollowProvider
             followers.Add(new UserFollowInfo
             {
                 UserId = reader.GetGuid(0),
-                Username = reader.GetString(1),
-                FirstName = reader.GetString(2),
-                LastName = reader.GetString(3),
-                Email = reader.GetString(4),
-                Role = (UserRole)reader.GetInt32(5),
-                LastModified = reader.GetDateTime(6)
+                FirstName = reader.GetString(1),
+                LastName = reader.GetString(2),
+                Email = reader.GetString(3),
+                Department = reader.IsDBNull(4) ? null : reader.GetString(4),
+                LastModified = reader.GetDateTime(5)
             });
         }
         return followers;
@@ -267,7 +265,7 @@ public class PostgreSQLFollowProvider : IFollowProvider
         await connection.OpenAsync();
 
         var query = @"
-            SELECT u.id, u.username, u.first_name, u.last_name, u.email, u.role, utf.last_modified
+            SELECT u.id, u.first_name, u.last_name, u.email, u.department, utf.last_modified
             FROM user_follow_team utf
             JOIN users u ON u.id = utf.follower_user_id
             WHERE utf.company_id = @company_id 
@@ -287,12 +285,11 @@ public class PostgreSQLFollowProvider : IFollowProvider
             followers.Add(new UserFollowInfo
             {
                 UserId = reader.GetGuid(0),
-                Username = reader.GetString(1),
-                FirstName = reader.GetString(2),
-                LastName = reader.GetString(3),
-                Email = reader.GetString(4),
-                Role = (UserRole)reader.GetInt32(5),
-                LastModified = reader.GetDateTime(6)
+                FirstName = reader.GetString(1),
+                LastName = reader.GetString(2),
+                Email = reader.GetString(3),
+                Department = reader.IsDBNull(4) ? null : reader.GetString(4),
+                LastModified = reader.GetDateTime(5)
             });
         }
         return followers;

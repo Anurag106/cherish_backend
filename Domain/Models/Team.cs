@@ -10,3 +10,15 @@ public class Team
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+public class TeamEmployee
+{
+    public Guid Id { get; set; }
+    public string FullName { get; set; } = string.Empty;
+}
+
+public class TeamWithEmployees
+{
+    public Team Team { get; set; } = new();
+    public List<TeamEmployee> Employees { get; set; } = new();
+}

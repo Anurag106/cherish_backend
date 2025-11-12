@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 using System.CommandLine;
 
 namespace Database;
@@ -23,6 +24,8 @@ public class DatabaseManager
                 Console.WriteLine("==================================");
                 
                 var configuration = BuildConfiguration();
+                await EnsureDatabaseExistsAsync(configuration);
+
                 var schemaManager = new DatabaseSchemaManager(configuration);
                 
                 await schemaManager.InitializeDatabaseAsync();
@@ -51,6 +54,49 @@ public class DatabaseManager
         });
 
         return await rootCommand.InvokeAsync(args);
+    }
+
+    private static async Task EnsureDatabaseExistsAsync(IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("Connection string 'PostgreSQL' not found in configuration.");
+        }
+
+        var builder = new NpgsqlConnectionStringBuilder(connectionString);
+        var databaseName = builder.Database;
+
+        if (string.IsNullOrWhiteSpace(databaseName))
+        {
+            throw new InvalidOperationException("Database name not specified in PostgreSQL connection string.");
+        }
+
+        // Connect to the default 'postgres' database to check/create the target database
+        builder.Database = "postgres";
+
+        using var adminConnection = new NpgsqlConnection(builder.ConnectionString);
+        await adminConnection.OpenAsync();
+
+        var checkCommandText = "SELECT 1 FROM pg_database WHERE datname = @dbname";
+        using var checkCommand = new NpgsqlCommand(checkCommandText, adminConnection);
+        checkCommand.Parameters.AddWithValue("@dbname", databaseName);
+
+        var exists = await checkCommand.ExecuteScalarAsync();
+
+        if (exists == null)
+        {
+            Console.WriteLine($"📦 Creating database '{databaseName}'...");
+            var createCommandText = $"CREATE DATABASE \"{databaseName}\"";
+            using var createCommand = new NpgsqlCommand(createCommandText, adminConnection);
+            await createCommand.ExecuteNonQueryAsync();
+            Console.WriteLine($"✅ Database '{databaseName}' created successfully.");
+        }
+        else
+        {
+            Console.WriteLine($"ℹ️ Database '{databaseName}' already exists.");
+        }
     }
 
     private static IConfiguration BuildConfiguration()

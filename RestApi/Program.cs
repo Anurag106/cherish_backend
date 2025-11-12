@@ -33,23 +33,6 @@ builder.Services.AddVersionedApiExplorer(options =>
 // Configure Swagger to emit a document per API version
 builder.Services.AddSwaggerGen(options =>
 {
-    // Basic JWT support in Swagger UI (optional)
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter into field the word 'Bearer' followed by a space and the JWT value.",
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
-    });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement {
-        {
-            new OpenApiSecurityScheme {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            new string[] {}
-        }
-    });
-
     // You can further customize here; per-version docs are added at runtime using IApiVersionDescriptionProvider
 });
 // Configure CORS from appsettings.json
@@ -88,6 +71,7 @@ builder.Services.AddScoped<IPostProvider, PostgreSQLPostProvider>();
 builder.Services.AddScoped<ICommentProvider, PostgreSQLCommentProvider>();
 builder.Services.AddScoped<IReactionProvider, PostgreSQLReactionProvider>();
 builder.Services.AddScoped<IFollowProvider, PostgreSQLFollowProvider>();
+builder.Services.AddScoped<IAnalyticsProvider, MockAnalyticsProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
@@ -97,14 +81,14 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IReactionService, ReactionService>();
 builder.Services.AddScoped<IFollowService, FollowService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IContentParsingService, ContentParsingService>();
-builder.Services.AddScoped<ITokenService, JwtTokenService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 
-// Configure JWT authentication
+// Note: Authentication is handled by yogi_code/backend
+// This service validates JWT tokens issued by yogi_code/backend for authorization
+// JWT Configuration MUST match yogi_code/backend exactly!
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
-var key = Encoding.ASCII.GetBytes(secretKey);
+var jwtKey = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -113,22 +97,36 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = false; // Set to true in production
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ValidateIssuer = true,
-        ValidIssuer = jwtSettings["Issuer"] ?? "Cherish",
+        ValidIssuer = jwtSettings["Issuer"],
         ValidateAudience = true,
-        ValidAudience = jwtSettings["Audience"] ?? "Cherish",
+        ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
 });
 
 builder.Services.AddAuthorization();
+
+// Register HttpContextAccessor for accessing user claims from JWT
+builder.Services.AddHttpContextAccessor();
+
+// Register UserContextService to extract user info from JWT claims
+builder.Services.AddScoped<IUserContextService, UserContextService>();
+
+// Register legacy ITokenService adapter for backward compatibility with existing controllers
+// TODO: Remove this after all controllers are updated to use BaseApiController
+builder.Services.AddScoped<Domain.Services.ITokenService, JwtClaimsAdapter>();
+
+// Add logging for debugging
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 var app = builder.Build();
 
@@ -147,6 +145,7 @@ app.UseRouting();
 // Enable CORS
 app.UseCors("AllowConfiguredOrigins");
 
+// JWT Token Validation (validates tokens issued by yogi_code/backend)
 app.UseAuthentication();
 app.UseAuthorization();
 

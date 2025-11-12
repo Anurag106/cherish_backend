@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Database",
+    "\\Database\\Scripts",
+    "\\Provider"
   ],
-  "SelectedNode": "\\.gitignore",
+  "SelectedNode": "\\Database\\Scripts\\06_posts.sql",
   "PreviewInSolutionExplorer": false
 }

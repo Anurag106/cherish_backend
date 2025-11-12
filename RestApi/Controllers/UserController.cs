@@ -62,12 +62,13 @@ public class UserController : ControllerBase
 
             var response = new UserProfileResponse
             {
-                Username = user.Username,
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Role = user.Role,
-                Status = user.Status,
+                PreferredFirstName = user.PreferredFirstName,
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                UserMode = user.UserMode,
+                EmployeeStatus = user.EmployeeStatus,
                 TeamId = user.TeamId,
                 Department = user.Department,
                 JobTitle = user.JobTitle,
@@ -182,7 +183,6 @@ public class UserController : ControllerBase
                 request.UserIds,
                 request.Status,
                 request.TeamId,
-                request.Role,
                 request.PageNumber,
                 request.PageSize
             );
@@ -190,12 +190,11 @@ public class UserController : ControllerBase
             var response = users.Select(user => new UserListResponse
             {
                 Id = user.Id,
-                Username = user.Username,
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Role = user.Role,
-                Status = user.Status,
+                UserMode = user.UserMode,
+                EmployeeStatus = user.EmployeeStatus,
                 TeamId = user.TeamId,
                 Department = user.Department,
                 JobTitle = user.JobTitle,
@@ -253,7 +252,6 @@ public class UserController : ControllerBase
             var response = users.Select(user => new UserMentionResponse
             {
                 UserId = user.Id,
-                Username = user.Username,
                 FullName = $"{user.FirstName} {user.LastName}".Trim(),
                 Department = user.Department
             }).ToList();
@@ -299,7 +297,6 @@ public class UserController : ControllerBase
             var response = teammates.Select(user => new UserMentionResponse
             {
                 UserId = user.Id,
-                Username = user.Username,
                 FullName = $"{user.FirstName} {user.LastName}".Trim(),
                 Department = user.Department
             }).ToList();

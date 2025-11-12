@@ -10,9 +10,8 @@ public class AddPointsRequest
 public class GetUsersRequest
 {
     public List<Guid>? UserIds { get; set; }
-    public UserStatus? Status { get; set; }
+    public EmployeeStatus? Status { get; set; }
     public Guid? TeamId { get; set; }
-    public UserRole? Role { get; set; }
     public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 }

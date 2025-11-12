@@ -42,16 +42,20 @@ public class ContentParsingService : IContentParsingService
         }
 
         // Parse user mentions (@username) from comment content
+        // TODO: Update mention system to use email or user ID instead of username
+        // For now, mentions are disabled until proper implementation
+        /* TEMPORARILY DISABLED - Username field removed
         var mentionMatches = Regex.Matches(content, @"@(\w+)");
         foreach (Match match in mentionMatches)
         {
             var username = match.Groups[1].Value;
-            var user = await _userProvider.GetUserByUsernameAsync(username);
+            var user = await _userProvider.GetUserByEmailAsync(username);
             if (user != null && user.CompanyId == companyId)
             {
                 userMentioned.Add(user.Id);
             }
         }
+        */
 
         // If postedByAdded is true, add the post creator if not already mentioned
         if (postedByAdded && !userMentioned.Contains(originalPost.UserId))
@@ -109,11 +113,13 @@ public class ContentParsingService : IContentParsingService
 
         // Parse user mentions (@username) and convert to user IDs
         // Pattern allows alphanumeric, dots, hyphens, and underscores in usernames
+        // TODO: Update mention system to use email or user ID instead of username
+        /* TEMPORARILY DISABLED - Username field removed
         var mentionMatches = Regex.Matches(content, @"@([\w.-]+)");
         foreach (Match match in mentionMatches)
         {
             var username = match.Groups[1].Value;
-            var user = await _userProvider.GetUserByUsernameAsync(username);
+            var user = await _userProvider.GetUserByEmailAsync(username);
             if (user != null && user.CompanyId == companyId)
             {
                 userMentioned.Add(user.Id);
@@ -124,6 +130,7 @@ public class ContentParsingService : IContentParsingService
                 notFoundUsernames.Add(username);
             }
         }
+        */
 
         // Parse hashtags (#hashtagname) and convert to hashtag IDs
         // Create hashtag if it doesn't exist

@@ -4,14 +4,14 @@ namespace Domain.Providers;
 
 public interface IUserProvider
 {
-    Task<User?> GetUserByUsernameAsync(string username);
+    Task<User?> GetUserByEmailAsync(string email);
     Task<User?> GetUserByIdAsync(Guid id);
     Task<List<User>> GetUsersByCompanyIdAsync(Guid companyId);
-    Task<User> CreateUserAsync(string username, string password, Guid companyId);
-    Task<bool> UpdateUserPasswordAsync(string username, string newPassword);
-    Task<bool> DeleteUserAsync(string username);
+    Task<User> CreateUserAsync(Guid userId, string email, string firstName, string lastName, Guid companyId);
     Task<bool> UpdateUserPointsAsync(Guid userId, int newTotalPoints, int newAvailablePoints);
-    Task<List<User>> GetUsersAsync(Guid companyId, List<Guid>? userIds = null, UserStatus? status = null, Guid? teamId = null, UserRole? role = null, int pageNumber = 1, int pageSize = 20);
+    Task<bool> DeleteUserAsync(Guid userId);
+    Task<List<User>> GetUsersAsync(Guid companyId, List<Guid>? userIds = null, EmployeeStatus? status = null, Guid? teamId = null, int pageNumber = 1, int pageSize = 20);
     Task<List<User>> GetUserAutocompleteAsync(Guid companyId, string searchTerm, int limit = 3);
     Task<List<User>> GetTeammatesAsync(Guid userId, Guid companyId);
+    Task<User?> UpsertUserFromJwtAsync(Guid userId, string email, string firstName, string lastName, Guid companyId, string? department, UserMode userMode, EmployeeStatus employeeStatus);
 }
