@@ -1,7 +1,6 @@
 using Cherish.RestApi.Models.Requests;
 using Cherish.RestApi.Models.Responses;
 using Domain.Services;
-using Domain.Providers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,13 +14,11 @@ namespace Cherish.RestApi.Controllers;
 public class TeamController : ControllerBase
 {
     private readonly ITeamService _teamService;
-    private readonly IUserProvider _userProvider;
     private readonly ILogger<TeamController> _logger;
 
-    public TeamController(ITeamService teamService, IUserProvider userProvider, ILogger<TeamController> logger)
+    public TeamController(ITeamService teamService, ILogger<TeamController> logger)
     {
         _teamService = teamService;
-        _userProvider = userProvider;
         _logger = logger;
     }
 
@@ -39,9 +36,9 @@ public class TeamController : ControllerBase
                 });
             }
 
-            var team = await _teamService.CreateTeamAsync(request.Name, request.ManagerId, request.CompanyId);
+            var teamWithEmployees = await _teamService.CreateTeamWithEmployeesAsync(request.Name, request.ManagerId, request.CompanyId);
             
-            if (team == null)
+            if (teamWithEmployees == null)
             {
                 return Conflict(new ApiResponse<TeamResponse>
                 {
@@ -50,31 +47,16 @@ public class TeamController : ControllerBase
                 });
             }
 
-            // Fetch employee information (though newly created team might not have employees yet)
-            var employees = new List<EmployeeInfo>();
-            foreach (var employeeId in team.EmployeeIds)
-            {
-                var employee = await _userProvider.GetUserByIdAsync(employeeId);
-                if (employee != null)
-                {
-                    employees.Add(new EmployeeInfo
-                    {
-                        Id = employee.Id,
-                        FullName = $"{employee.FirstName} {employee.LastName}".Trim()
-                    });
-                }
-            }
-
             var response = new TeamResponse
             {
-                Id = team.Id,
-                Name = team.Name,
-                ManagerId = team.ManagerId,
-                CompanyId = team.CompanyId,
-                EmployeeIds = team.EmployeeIds,
-                Employees = employees,
-                CreatedAt = team.CreatedAt,
-                UpdatedAt = team.UpdatedAt
+                Id = teamWithEmployees.Team.Id,
+                Name = teamWithEmployees.Team.Name,
+                ManagerId = teamWithEmployees.Team.ManagerId,
+                CompanyId = teamWithEmployees.Team.CompanyId,
+                EmployeeIds = teamWithEmployees.Team.EmployeeIds,
+                Employees = teamWithEmployees.Employees,
+                CreatedAt = teamWithEmployees.Team.CreatedAt,
+                UpdatedAt = teamWithEmployees.Team.UpdatedAt
             };
 
             return Ok(new ApiResponse<TeamResponse>
@@ -100,9 +82,9 @@ public class TeamController : ControllerBase
     {
         try
         {
-            var team = await _teamService.GetTeamByIdAsync(id);
+            var teamWithEmployees = await _teamService.GetTeamWithEmployeesByIdAsync(id);
             
-            if (team == null)
+            if (teamWithEmployees == null)
             {
                 return NotFound(new ApiResponse<TeamResponse>
                 {
@@ -111,31 +93,16 @@ public class TeamController : ControllerBase
                 });
             }
 
-            // Fetch employee information
-            var employees = new List<EmployeeInfo>();
-            foreach (var employeeId in team.EmployeeIds)
-            {
-                var employee = await _userProvider.GetUserByIdAsync(employeeId);
-                if (employee != null)
-                {
-                    employees.Add(new EmployeeInfo
-                    {
-                        Id = employee.Id,
-                        FullName = $"{employee.FirstName} {employee.LastName}".Trim()
-                    });
-                }
-            }
-
             var response = new TeamResponse
             {
-                Id = team.Id,
-                Name = team.Name,
-                ManagerId = team.ManagerId,
-                CompanyId = team.CompanyId,
-                EmployeeIds = team.EmployeeIds,
-                Employees = employees,
-                CreatedAt = team.CreatedAt,
-                UpdatedAt = team.UpdatedAt
+                Id = teamWithEmployees.Team.Id,
+                Name = teamWithEmployees.Team.Name,
+                ManagerId = teamWithEmployees.Team.ManagerId,
+                CompanyId = teamWithEmployees.Team.CompanyId,
+                EmployeeIds = teamWithEmployees.Team.EmployeeIds,
+                Employees = teamWithEmployees.Employees,
+                CreatedAt = teamWithEmployees.Team.CreatedAt,
+                UpdatedAt = teamWithEmployees.Team.UpdatedAt
             };
 
             return Ok(new ApiResponse<TeamResponse>
@@ -161,38 +128,19 @@ public class TeamController : ControllerBase
     {
         try
         {
-            var teams = await _teamService.GetTeamsByCompanyIdAsync(companyId);
+            var teamsWithEmployees = await _teamService.GetTeamsWithEmployeesByCompanyIdAsync(companyId);
 
-            var response = new List<TeamResponse>();
-            foreach (var team in teams)
+            var response = teamsWithEmployees.Select(t => new TeamResponse
             {
-                // Fetch employee information for each team
-                var employees = new List<EmployeeInfo>();
-                foreach (var employeeId in team.EmployeeIds)
-                {
-                    var employee = await _userProvider.GetUserByIdAsync(employeeId);
-                    if (employee != null)
-                    {
-                        employees.Add(new EmployeeInfo
-                        {
-                            Id = employee.Id,
-                            FullName = $"{employee.FirstName} {employee.LastName}".Trim()
-                        });
-                    }
-                }
-
-                response.Add(new TeamResponse
-                {
-                    Id = team.Id,
-                    Name = team.Name,
-                    ManagerId = team.ManagerId,
-                    CompanyId = team.CompanyId,
-                    EmployeeIds = team.EmployeeIds,
-                    Employees = employees,
-                    CreatedAt = team.CreatedAt,
-                    UpdatedAt = team.UpdatedAt
-                });
-            }
+                Id = t.Team.Id,
+                Name = t.Team.Name,
+                ManagerId = t.Team.ManagerId,
+                CompanyId = t.Team.CompanyId,
+                EmployeeIds = t.Team.EmployeeIds,
+                Employees = t.Employees,
+                CreatedAt = t.Team.CreatedAt,
+                UpdatedAt = t.Team.UpdatedAt
+            }).ToList();
 
             return Ok(new ApiResponse<List<TeamResponse>>
             {
@@ -217,38 +165,19 @@ public class TeamController : ControllerBase
     {
         try
         {
-            var teams = await _teamService.GetTeamsByManagerIdAsync(managerId);
+            var teamsWithEmployees = await _teamService.GetTeamsWithEmployeesByManagerIdAsync(managerId);
 
-            var response = new List<TeamResponse>();
-            foreach (var team in teams)
+            var response = teamsWithEmployees.Select(t => new TeamResponse
             {
-                // Fetch employee information for each team
-                var employees = new List<EmployeeInfo>();
-                foreach (var employeeId in team.EmployeeIds)
-                {
-                    var employee = await _userProvider.GetUserByIdAsync(employeeId);
-                    if (employee != null)
-                    {
-                        employees.Add(new EmployeeInfo
-                        {
-                            Id = employee.Id,
-                            FullName = $"{employee.FirstName} {employee.LastName}".Trim()
-                        });
-                    }
-                }
-
-                response.Add(new TeamResponse
-                {
-                    Id = team.Id,
-                    Name = team.Name,
-                    ManagerId = team.ManagerId,
-                    CompanyId = team.CompanyId,
-                    EmployeeIds = team.EmployeeIds,
-                    Employees = employees,
-                    CreatedAt = team.CreatedAt,
-                    UpdatedAt = team.UpdatedAt
-                });
-            }
+                Id = t.Team.Id,
+                Name = t.Team.Name,
+                ManagerId = t.Team.ManagerId,
+                CompanyId = t.Team.CompanyId,
+                EmployeeIds = t.Team.EmployeeIds,
+                Employees = t.Employees,
+                CreatedAt = t.Team.CreatedAt,
+                UpdatedAt = t.Team.UpdatedAt
+            }).ToList();
 
             return Ok(new ApiResponse<List<TeamResponse>>
             {
@@ -273,38 +202,19 @@ public class TeamController : ControllerBase
     {
         try
         {
-            var teams = await _teamService.GetAllTeamsAsync();
+            var teamsWithEmployees = await _teamService.GetAllTeamsWithEmployeesAsync();
 
-            var response = new List<TeamResponse>();
-            foreach (var team in teams)
+            var response = teamsWithEmployees.Select(t => new TeamResponse
             {
-                // Fetch employee information for each team
-                var employees = new List<EmployeeInfo>();
-                foreach (var employeeId in team.EmployeeIds)
-                {
-                    var employee = await _userProvider.GetUserByIdAsync(employeeId);
-                    if (employee != null)
-                    {
-                        employees.Add(new EmployeeInfo
-                        {
-                            Id = employee.Id,
-                            FullName = $"{employee.FirstName} {employee.LastName}".Trim()
-                        });
-                    }
-                }
-
-                response.Add(new TeamResponse
-                {
-                    Id = team.Id,
-                    Name = team.Name,
-                    ManagerId = team.ManagerId,
-                    CompanyId = team.CompanyId,
-                    EmployeeIds = team.EmployeeIds,
-                    Employees = employees,
-                    CreatedAt = team.CreatedAt,
-                    UpdatedAt = team.UpdatedAt
-                });
-            }
+                Id = t.Team.Id,
+                Name = t.Team.Name,
+                ManagerId = t.Team.ManagerId,
+                CompanyId = t.Team.CompanyId,
+                EmployeeIds = t.Team.EmployeeIds,
+                Employees = t.Employees,
+                CreatedAt = t.Team.CreatedAt,
+                UpdatedAt = t.Team.UpdatedAt
+            }).ToList();
 
             return Ok(new ApiResponse<List<TeamResponse>>
             {
@@ -338,9 +248,9 @@ public class TeamController : ControllerBase
                 });
             }
 
-            var team = await _teamService.UpdateTeamAsync(id, request.Name, request.ManagerId);
+            var teamWithEmployees = await _teamService.UpdateTeamWithEmployeesAsync(id, request.Name, request.ManagerId);
             
-            if (team == null)
+            if (teamWithEmployees == null)
             {
                 return NotFound(new ApiResponse<TeamResponse>
                 {
@@ -349,31 +259,16 @@ public class TeamController : ControllerBase
                 });
             }
 
-            // Fetch employee information
-            var employees = new List<EmployeeInfo>();
-            foreach (var employeeId in team.EmployeeIds)
-            {
-                var employee = await _userProvider.GetUserByIdAsync(employeeId);
-                if (employee != null)
-                {
-                    employees.Add(new EmployeeInfo
-                    {
-                        Id = employee.Id,
-                        FullName = $"{employee.FirstName} {employee.LastName}".Trim()
-                    });
-                }
-            }
-
             var response = new TeamResponse
             {
-                Id = team.Id,
-                Name = team.Name,
-                ManagerId = team.ManagerId,
-                CompanyId = team.CompanyId,
-                EmployeeIds = team.EmployeeIds,
-                Employees = employees,
-                CreatedAt = team.CreatedAt,
-                UpdatedAt = team.UpdatedAt
+                Id = teamWithEmployees.Team.Id,
+                Name = teamWithEmployees.Team.Name,
+                ManagerId = teamWithEmployees.Team.ManagerId,
+                CompanyId = teamWithEmployees.Team.CompanyId,
+                EmployeeIds = teamWithEmployees.Team.EmployeeIds,
+                Employees = teamWithEmployees.Employees,
+                CreatedAt = teamWithEmployees.Team.CreatedAt,
+                UpdatedAt = teamWithEmployees.Team.UpdatedAt
             };
 
             return Ok(new ApiResponse<TeamResponse>

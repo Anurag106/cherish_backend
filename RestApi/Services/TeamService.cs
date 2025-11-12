@@ -325,4 +325,174 @@ public class TeamService : ITeamService
             throw;
         }
     }
+
+    // New methods that include employee details
+    public async Task<TeamWithEmployees?> GetTeamWithEmployeesByIdAsync(Guid id)
+    {
+        try
+        {
+            if (id == Guid.Empty)
+            {
+                _logger.LogWarning("Attempted to get team with empty GUID");
+                return null;
+            }
+
+            var team = await _teamProvider.GetTeamByIdAsync(id);
+            if (team == null)
+                return null;
+
+            return await BuildTeamWithEmployees(team);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving team with employees by ID: {Id}", id);
+            throw;
+        }
+    }
+
+    public async Task<List<TeamWithEmployees>> GetTeamsWithEmployeesByCompanyIdAsync(Guid companyId)
+    {
+        try
+        {
+            if (companyId == Guid.Empty)
+            {
+                _logger.LogWarning("Attempted to get teams with empty company GUID");
+                return new List<TeamWithEmployees>();
+            }
+
+            var teams = await _teamProvider.GetTeamsByCompanyIdAsync(companyId);
+            var result = new List<TeamWithEmployees>();
+
+            foreach (var team in teams)
+            {
+                var teamWithEmployees = await BuildTeamWithEmployees(team);
+                if (teamWithEmployees != null)
+                    result.Add(teamWithEmployees);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving teams with employees for company: {CompanyId}", companyId);
+            throw;
+        }
+    }
+
+    public async Task<List<TeamWithEmployees>> GetTeamsWithEmployeesByManagerIdAsync(Guid managerId)
+    {
+        try
+        {
+            if (managerId == Guid.Empty)
+            {
+                _logger.LogWarning("Attempted to get teams with empty manager GUID");
+                return new List<TeamWithEmployees>();
+            }
+
+            var teams = await _teamProvider.GetTeamsByManagerIdAsync(managerId);
+            var result = new List<TeamWithEmployees>();
+
+            foreach (var team in teams)
+            {
+                var teamWithEmployees = await BuildTeamWithEmployees(team);
+                if (teamWithEmployees != null)
+                    result.Add(teamWithEmployees);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving teams with employees for manager: {ManagerId}", managerId);
+            throw;
+        }
+    }
+
+    public async Task<List<TeamWithEmployees>> GetAllTeamsWithEmployeesAsync()
+    {
+        try
+        {
+            var teams = await _teamProvider.GetAllTeamsAsync();
+            var result = new List<TeamWithEmployees>();
+
+            foreach (var team in teams)
+            {
+                var teamWithEmployees = await BuildTeamWithEmployees(team);
+                if (teamWithEmployees != null)
+                    result.Add(teamWithEmployees);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all teams with employees");
+            throw;
+        }
+    }
+
+    public async Task<TeamWithEmployees?> CreateTeamWithEmployeesAsync(string name, Guid managerId, Guid companyId)
+    {
+        try
+        {
+            var team = await CreateTeamAsync(name, managerId, companyId);
+            if (team == null)
+                return null;
+
+            return await BuildTeamWithEmployees(team);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating team with employees: {Name}", name);
+            throw;
+        }
+    }
+
+    public async Task<TeamWithEmployees?> UpdateTeamWithEmployeesAsync(Guid id, string name, Guid managerId)
+    {
+        try
+        {
+            var team = await UpdateTeamAsync(id, name, managerId);
+            if (team == null)
+                return null;
+
+            return await BuildTeamWithEmployees(team);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating team with employees: {Id}", id);
+            throw;
+        }
+    }
+
+    private async Task<TeamWithEmployees?> BuildTeamWithEmployees(Team team)
+    {
+        try
+        {
+            var employees = new List<TeamEmployee>();
+            foreach (var employeeId in team.EmployeeIds)
+            {
+                var employee = await _userProvider.GetUserByIdAsync(employeeId);
+                if (employee != null)
+                {
+                    employees.Add(new TeamEmployee
+                    {
+                        Id = employee.Id,
+                        FullName = $"{employee.FirstName} {employee.LastName}".Trim()
+                    });
+                }
+            }
+
+            return new TeamWithEmployees
+            {
+                Team = team,
+                Employees = employees
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error building team with employees for team: {TeamId}", team.Id);
+            throw;
+        }
+    }
 }

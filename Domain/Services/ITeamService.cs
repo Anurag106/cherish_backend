@@ -14,4 +14,12 @@ public interface ITeamService
     Task<bool> AddEmployeeToTeamAsync(Guid teamId, Guid employeeId);
     Task<bool> RemoveEmployeeFromTeamAsync(Guid teamId, Guid employeeId);
     Task<List<Team>> GetAllTeamsAsync();
+    
+    // New methods that include employee details
+    Task<TeamWithEmployees?> GetTeamWithEmployeesByIdAsync(Guid id);
+    Task<List<TeamWithEmployees>> GetTeamsWithEmployeesByCompanyIdAsync(Guid companyId);
+    Task<List<TeamWithEmployees>> GetTeamsWithEmployeesByManagerIdAsync(Guid managerId);
+    Task<List<TeamWithEmployees>> GetAllTeamsWithEmployeesAsync();
+    Task<TeamWithEmployees?> CreateTeamWithEmployeesAsync(string name, Guid managerId, Guid companyId);
+    Task<TeamWithEmployees?> UpdateTeamWithEmployeesAsync(Guid id, string name, Guid managerId);
 }
